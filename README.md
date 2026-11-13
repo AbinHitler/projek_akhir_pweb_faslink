@@ -26,3 +26,9 @@ Fitur ini digunakan oleh admin untuk mengelola proses serah terima dan pengembal
 
 ### Fungsi Website
 FASLINK dikembangkan untuk meningkatkan efisiensi pengelolaan fasilitas kampus, mempermudah mahasiswa dalam melakukan pengajuan peminjaman, membantu petugas dalam memantau ketersediaan fasilitas, serta menyediakan pencatatan transaksi peminjaman dan pengembalian yang lebih terstruktur.
+
+### PJ FRONTEND
+SALWA NADYA ABABIL (252410103080)
+
+### PJ BACKEND
+Abin Mohammad Syafrial (252410103053)
