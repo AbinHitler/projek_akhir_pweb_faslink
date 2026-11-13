@@ -23,3 +23,6 @@ Fitur ini digunakan oleh admin untuk memeriksa dan memproses pengajuan peminjama
 
 ### 4. Pengembalian dan Pelaporan
 Fitur ini digunakan oleh admin untuk mengelola proses serah terima dan pengembalian fasilitas yang telah dipinjam. Admin dapat mencatat kondisi awal fasilitas saat diserahkan dan kondisi akhir saat dikembalikan. Jika ditemukan kerusakan atau kehilangan, admin dapat membuat laporan serta memperbarui kondisi dan stok fasilitas. Fitur ini juga menyediakan laporan dan statistik peminjaman yang dapat difilter serta diekspor ke format PDF atau Excel.
+
+###Fungsi Website
+FASLINK dikembangkan untuk meningkatkan efisiensi pengelolaan fasilitas kampus, mempermudah mahasiswa dalam melakukan pengajuan peminjaman, membantu petugas dalam memantau ketersediaan fasilitas, serta menyediakan pencatatan transaksi peminjaman dan pengembalian yang lebih terstruktur.
