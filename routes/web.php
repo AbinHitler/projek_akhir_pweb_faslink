@@ -1,16 +1,19 @@
 
 <?php
 
+use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\FacilityController;
 use App\Http\Controllers\FacilityCatalogController;
 use App\Http\Controllers\LoanController;
 use Illuminate\Support\Facades\Route;
 
-// Halaman Login
-Route::view('/login', 'login')->name('login');
+// Halaman utama langsung membuka dashboard mahasiswa (tanpa login)
+Route::get('/', fn () => redirect()->route('user.dashboard'));
 
-// Halaman utama
-Route::get('/', fn () => redirect()->route('login'));
+// Login khusus admin
+Route::get('/login', [AuthController::class, 'create'])->name('login');
+Route::post('/login', [AuthController::class, 'store'])->name('login.store');
+Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
 
 // Halaman Mahasiswa
 Route::prefix('faslink')->name('user.')->group(function () {
@@ -63,8 +66,8 @@ Route::prefix('faslink')->name('user.')->group(function () {
     Route::view('/profil', 'user.profile')->name('profile');
 });
 
-// Halaman Admin
-Route::prefix('faslink/admin')->name('admin.')->group(function () {
+// Halaman Admin (wajib login admin)
+Route::prefix('faslink/admin')->name('admin.')->middleware('admin')->group(function () {
 
     // Dashboard Admin
     Route::view('/', 'admin.dashboard', ['role' => 'admin'])
@@ -100,9 +103,6 @@ Route::prefix('faslink/admin')->name('admin.')->group(function () {
 
     Route::view('/serah-terima', 'admin.handover', ['role' => 'admin'])
         ->name('handover');
-
-    Route::view('/pengembalian', 'admin.returns', ['role' => 'admin'])
-        ->name('returns');
 
     Route::view('/kerusakan', 'admin.damage', ['role' => 'admin'])
         ->name('damage');

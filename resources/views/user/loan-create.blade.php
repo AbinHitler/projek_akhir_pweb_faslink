@@ -1,53 +1,106 @@
-<<<<<<< HEAD
-@extends('layouts.app') @section('title','Form Pengajuan') @section('heading','Pengajuan Peminjaman')
-@section('content')<div class="page-intro"><div><h1>Form Pengajuan Peminjaman</h1><p class="muted">Lengkapi informasi kegiatan dan fasilitas yang ingin dipinjam.</p></div></div><div class="panel"><form class="demo-form" data-success="Pengajuan berhasil disiapkan (demo)."><h3 class="form-section-title">1. Informasi Kegiatan</h3><div class="row g-3"><div class="col-md-6"><label class="form-label">Nama kegiatan *</label><input class="form-control" required placeholder="Contoh: Seminar Nasional"></div><div class="col-md-6"><label class="form-label">Organisasi / UKM</label><input class="form-control" placeholder="Nama organisasi"></div><div class="col-12"><label class="form-label">Deskripsi / tujuan kegiatan *</label><textarea class="form-control" rows="3" required></textarea></div><div class="col-md-6"><label class="form-label">Penanggung jawab *</label><input class="form-control" required></div><div class="col-md-6"><label class="form-label">Kontak penanggung jawab *</label><input class="form-control" required placeholder="08xxxxxxxxxx"></div><div class="col-md-4"><label class="form-label">Jumlah peserta *</label><input type="number" min="1" class="form-control" required></div></div><hr><h3 class="form-section-title">2. Jadwal Peminjaman</h3><div class="row g-3"><div class="col-md-6"><label class="form-label">Tanggal mulai *</label><input type="datetime-local" class="form-control" required></div><div class="col-md-6"><label class="form-label">Tanggal selesai *</label><input type="datetime-local" class="form-control" required></div></div><hr><h3 class="form-section-title">3. Fasilitas yang Dipinjam</h3><div class="row g-3"><div class="col-md-8"><label class="form-label">Pilih fasilitas *</label><select class="form-select" required><option value="">Pilih fasilitas</option><option>Aula Serbaguna</option><option>Ruang Seminar</option><option>Proyektor</option><option>Sound System</option></select></div><div class="col-md-4"><label class="form-label">Jumlah barang</label><input type="number" min="1" value="1" class="form-control"></div><div class="col-12"><label class="form-label">Proposal / dokumen persyaratan</label><input type="file" class="form-control" accept=".pdf,.doc,.docx"></div><div class="col-12"><label class="form-label">Catatan tambahan</label><textarea class="form-control" rows="2"></textarea></div></div><div class="d-flex justify-content-end gap-2 mt-4"><a class="btn btn-light" href="{{ route('user.catalog') }}">Batal</a><button class="btn btn-primary" type="submit">Kirim Pengajuan <i class="bi bi-send ms-1"></i></button></div></form></div>@endsection
-=======
 @extends('layouts.app')
+
 @section('title', 'Form Pengajuan')
 @section('heading', 'Pengajuan Peminjaman')
 
 @section('content')
 <div class="page-intro">
-    <div><h1>Form Pengajuan Peminjaman</h1><p class="muted">Lengkapi informasi kegiatan dan fasilitas yang ingin dipinjam.</p></div>
+    <div>
+        <h1>Form Pengajuan Peminjaman</h1>
+        <p class="muted">Lengkapi informasi kegiatan dan fasilitas yang ingin dipinjam.</p>
+    </div>
 </div>
 
 @if ($errors->any())
-    <div class="alert alert-danger"><strong>Pengajuan belum dapat dikirim.</strong><ul class="mb-0 mt-2">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
+    <div class="alert alert-danger">
+        <strong>Pengajuan belum dapat dikirim.</strong>
+        <ul class="mb-0 mt-2">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
 @endif
 
 <div class="panel">
-<form action="{{ route('user.loan.store') }}" method="POST" enctype="multipart/form-data">
-    @csrf
-    <h3 class="form-section-title">1. Informasi Kegiatan</h3>
-    <div class="row g-3">
-        <div class="col-md-6"><label class="form-label">Nama kegiatan *</label><input name="activity_name" class="form-control" required maxlength="150" value="{{ old('activity_name') }}" placeholder="Contoh: Seminar Nasional"></div>
-        <div class="col-md-6"><label class="form-label">Organisasi / UKM</label><input name="organization" class="form-control" maxlength="150" value="{{ old('organization') }}" placeholder="Nama organisasi"></div>
-        <div class="col-12"><label class="form-label">Deskripsi / tujuan kegiatan *</label><textarea name="description" class="form-control" rows="3" required>{{ old('description') }}</textarea></div>
-        <div class="col-md-6"><label class="form-label">Penanggung jawab *</label><input name="responsible_name" class="form-control" required maxlength="150" value="{{ old('responsible_name') }}"></div>
-        <div class="col-md-6"><label class="form-label">Kontak penanggung jawab *</label><input name="responsible_contact" class="form-control" required maxlength="30" value="{{ old('responsible_contact') }}" placeholder="08xxxxxxxxxx"></div>
-        <div class="col-md-4"><label class="form-label">Jumlah peserta *</label><input name="participant_count" type="number" min="1" class="form-control" required value="{{ old('participant_count') }}"></div>
-    </div>
-    <hr>
-        <h3 class="form-section-title">2. Jadwal Peminjaman</h3>
-    <div class="row g-3">
-        <div class="col-md-6"><label class="form-label">Tanggal mulai *</label><input id="start_at" name="start_at" type="datetime-local" class="form-control" required value="{{ old('start_at') }}"></div>
-        <div class="col-md-6"><label class="form-label">Tanggal selesai *</label><input id="end_at" name="end_at" type="datetime-local" class="form-control" required value="{{ old('end_at') }}"></div>
-    </div>
-    <hr>
-    <h3 class="form-section-title">3. Fasilitas yang Dipinjam</h3>
-    <div class="row g-3">
-        <div class="col-md-8"><label class="form-label">Pilih fasilitas *</label><select id="facility_name" name="facility_name" class="form-select" required><option value="">Pilih fasilitas</option>@foreach(['Aula Serbaguna','Ruang Seminar','Proyektor','Sound System'] as $facility)<option value="{{ $facility }}" @selected(old('facility_name') === $facility)>{{ $facility }}</option>@endforeach</select></div>
-        <div class="col-md-4"><label class="form-label">Jumlah barang</label><input name="quantity" type="number" min="1" value="{{ old('quantity', 1) }}" class="form-control" required></div>
-        <div class="col-12"><label class="form-label">Proposal / dokumen persyaratan (PDF/DOC/DOCX, maks. 5 MB)</label><input name="document" type="file" class="form-control" accept=".pdf,.doc,.docx"></div>
-        <div class="col-12"><label class="form-label">Catatan tambahan</label><textarea name="additional_notes" class="form-control" rows="2">{{ old('additional_notes') }}</textarea></div>
-    </div>
-    @include('user.partials.availability-calendar')
+    <form action="{{ route('user.loan.store') }}" method="POST" enctype="multipart/form-data">
+        @csrf
 
-    <div class="d-flex justify-content-end gap-2 mt-4">
-        <a class="btn btn-light" href="{{ route('user.catalog') }}">Batal</a>
-        <button class="btn btn-primary" type="submit">Kirim Pengajuan <i class="bi bi-send ms-1"></i></button>
-    </div>
-</form>
+        <h3 class="form-section-title">1. Informasi Kegiatan</h3>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Nama kegiatan *</label>
+                <input name="activity_name" class="form-control" required maxlength="150" value="{{ old('activity_name') }}" placeholder="Contoh: Seminar Nasional">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Organisasi / UKM</label>
+                <input name="organization" class="form-control" maxlength="150" value="{{ old('organization') }}" placeholder="Nama organisasi">
+            </div>
+            <div class="col-12">
+                <label class="form-label">Deskripsi / tujuan kegiatan *</label>
+                <textarea name="description" class="form-control" rows="3" required>{{ old('description') }}</textarea>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Penanggung jawab *</label>
+                <input name="responsible_name" class="form-control" required maxlength="150" value="{{ old('responsible_name') }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Kontak penanggung jawab *</label>
+                <input name="responsible_contact" class="form-control" required maxlength="30" value="{{ old('responsible_contact') }}" placeholder="08xxxxxxxxxx">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Jumlah peserta *</label>
+                <input name="participant_count" type="number" min="1" class="form-control" required value="{{ old('participant_count') }}">
+            </div>
+        </div>
+
+        <hr>
+
+        <h3 class="form-section-title">2. Jadwal Peminjaman</h3>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Tanggal mulai *</label>
+                <input id="start_at" name="start_at" type="datetime-local" class="form-control" required value="{{ old('start_at') }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Tanggal selesai *</label>
+                <input id="end_at" name="end_at" type="datetime-local" class="form-control" required value="{{ old('end_at') }}">
+            </div>
+        </div>
+
+        <hr>
+
+        <h3 class="form-section-title">3. Fasilitas yang Dipinjam</h3>
+        <div class="row g-3">
+            <div class="col-md-8">
+                <label class="form-label">Pilih fasilitas *</label>
+                <select id="facility_name" name="facility_name" class="form-select" required>
+                    <option value="">Pilih fasilitas</option>
+                    @foreach(['Aula Serbaguna', 'Ruang Seminar', 'Proyektor', 'Sound System'] as $facility)
+                        <option value="{{ $facility }}" @selected(old('facility_name') === $facility)>{{ $facility }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Jumlah barang</label>
+                <input name="quantity" type="number" min="1" value="{{ old('quantity', 1) }}" class="form-control" required>
+            </div>
+            <div class="col-12">
+                <label class="form-label">Proposal / dokumen persyaratan (PDF/DOC/DOCX, maks. 5 MB)</label>
+                <input name="document" type="file" class="form-control" accept=".pdf,.doc,.docx">
+            </div>
+            <div class="col-12">
+                <label class="form-label">Catatan tambahan</label>
+                <textarea name="additional_notes" class="form-control" rows="2">{{ old('additional_notes') }}</textarea>
+            </div>
+        </div>
+
+        @include('user.partials.availability-calendar')
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+            <a class="btn btn-light" href="{{ route('user.catalog') }}">Batal</a>
+            <button class="btn btn-primary" type="submit">Kirim Pengajuan <i class="bi bi-send ms-1"></i></button>
+        </div>
+    </form>
 </div>
 @endsection
->>>>>>> origin/main
