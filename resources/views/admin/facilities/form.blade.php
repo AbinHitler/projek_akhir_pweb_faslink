@@ -1,181 +1,48 @@
-
 @extends('layouts.app')
-
-@section('title', $facility->exists ? 'Edit Fasilitas' : 'Tambah Fasilitas')
-@section('heading', $facility->exists ? 'Edit Fasilitas' : 'Tambah Fasilitas')
+@php $edit = $f !== null; @endphp
+@section('title', $edit ? 'Ubah Fasilitas' : 'Tambah Fasilitas')
+@section('back')<a class="back-link" href="{{ route('admin.facilities') }}"><i class="bi bi-arrow-left"></i> Kembali ke Kelola Fasilitas</a>@endsection
 
 @section('content')
-
-<a class="back-link" href="{{ route('admin.facilities') }}">
-    <i class="bi bi-arrow-left"></i> Kembali ke manajemen fasilitas
-</a>
-
-<div class="panel mt-3">
-    <form method="POST" action="{{ $facility->exists ? route('admin.facilities.update', $facility) : route('admin.facilities.store') }}">
-        @csrf
-
-        @if($facility->exists)
-            @method('PUT')
-        @endif
-
-        @if($errors->any())
-            <div class="alert alert-danger">
-                Periksa kembali data: {{ $errors->first() }}
-            </div>
-        @endif
-
-        <div class="row g-3">
-
-            <div class="col-md-6">
-                <label class="form-label">Jenis fasilitas *</label>
-                <select name="type" id="facilityType" class="form-select" required>
-                    <option value="">Pilih jenis</option>
-                    @foreach(['gedung'=>'Gedung','ruangan'=>'Ruangan','barang'=>'Barang'] as $key => $label)
-                        <option value="{{ $key }}" @selected(old('type', $facility->type) === $key)>
-                            {{ $label }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Nama fasilitas *</label>
-                <input name="name" value="{{ old('name', $facility->name) }}"
-                    class="form-control" required maxlength="150"
-                    placeholder="Masukkan nama fasilitas">
-            </div>
-
-            <div class="col-md-6" id="parentField">
-                <label class="form-label">Gedung induk *</label>
-                <select name="parent_id" class="form-select">
-                    <option value="">Pilih gedung</option>
-                    @foreach($buildings as $building)
-                        <option value="{{ $building->id }}"
-                            @selected((string)old('parent_id', $facility->parent_id) === (string)$building->id)>
-                            {{ $building->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="col-md-6" id="locationField">
-                <label class="form-label">Lokasi gedung</label>
-                <input name="location" value="{{ old('location', $facility->location) }}"
-                    class="form-control" placeholder="Contoh: Area Fakultas Ilmu Komputer">
-            </div>
-
-            <div class="col-md-6" id="categoryField">
-                <label class="form-label">Kategori barang</label>
-                <select name="category_id" class="form-select">
-                    <option value="">Pilih kategori (opsional)</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}"
-                            @selected((string)old('category_id', $facility->category_id) === (string)$category->id)>
-                            {{ $category->name }}
-                        </option>
-                    @endforeach
-                </select>
-                <small class="text-muted">
-                    Kategori dapat diisi setelah data kategori tersedia.
-                </small>
-            </div>
-
-            <div class="col-md-6" id="capacityField">
-                <label class="form-label">Kapasitas ruangan (orang)</label>
-                <input type="number" min="1" name="capacity"
-                    value="{{ old('capacity', $facility->capacity) }}" class="form-control">
-            </div>
-
-            <div class="col-md-6" id="stockField">
-                <label class="form-label">Jumlah stok total</label>
-                <input type="number" min="0" name="stock_total"
-                    value="{{ old('stock_total', $facility->stock_total ?? 0) }}"
-                    class="form-control">
-            </div>
-
-            <div class="col-md-6" id="damagedField">
-                <label class="form-label">Jumlah stok rusak</label>
-                <input type="number" min="0" name="stock_damaged"
-                    value="{{ old('stock_damaged', $facility->stock_damaged ?? 0) }}"
-                    class="form-control">
-                <small class="text-muted">
-                    Stok tersedia = stok total dikurangi stok rusak.
-                </small>
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Kondisi fasilitas *</label>
-                <select name="condition" class="form-select" required>
-                    @foreach(['baik'=>'Baik','rusak'=>'Rusak','pemeliharaan'=>'Pemeliharaan'] as $key => $label)
-                        <option value="{{ $key }}"
-                            @selected(old('condition', $facility->condition ?: 'baik') === $key)>
-                            {{ $label }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Status fasilitas *</label>
-                <select name="status" class="form-select" required>
-                    <option value="aktif"
-                        @selected(old('status', $facility->status ?: 'aktif') === 'aktif')>
-                        Aktif
-                    </option>
-                    <option value="tidak_aktif"
-                        @selected(old('status', $facility->status) === 'tidak_aktif')>
-                        Tidak Aktif
-                    </option>
-                </select>
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Penanggung jawab</label>
-                <input name="responsible"
-                    value="{{ old('responsible', $facility->responsible) }}"
-                    class="form-control"
-                    placeholder="Nama penanggung jawab (opsional)">
-            </div>
-
-            <div class="col-12">
-                <label class="form-label">Deskripsi</label>
-                <textarea name="description" rows="3" class="form-control"
-                    placeholder="Keterangan tambahan">{{ old('description', $facility->description) }}</textarea>
-            </div>
-
-        </div>
-
-        <div class="d-flex justify-content-end gap-2 mt-4">
-            <a href="{{ route('admin.facilities') }}" class="btn btn-light">
-                Batal
-            </a>
-            <button class="btn btn-primary">
-                {{ $facility->exists ? 'Simpan Perubahan' : 'Simpan Fasilitas' }}
-            </button>
-        </div>
-    </form>
-</div>
-
+@php
+    $gedung = collect(config('faslink.facilities'))->where('jenis', 'gedung');
+    $v = fn ($k, $d = '') => $edit ? ($f[$k] ?? $d) : $d;
+@endphp
+<form class="card-soft demo-form" novalidate data-success="{{ $edit ? 'Perubahan fasilitas tersimpan (simulasi).' : 'Fasilitas baru ditambahkan (simulasi).' }}">
+  <h3>{{ $edit ? 'Ubah Fasilitas: ' . $f['nama'] : 'Tambah Fasilitas Baru' }}</h3>
+  <div class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label" for="fJenis">Jenis fasilitas <span class="req">*</span></label>
+      <select class="form-select" id="fJenis" required>
+        <option value="">Pilih jenis</option>
+        @foreach(['gedung' => 'Gedung', 'ruangan' => 'Ruangan', 'barang' => 'Barang'] as $val => $txt)<option value="{{ $val }}" @selected($v('jenis') === $val)>{{ $txt }}</option>@endforeach
+      </select><div class="invalid-feedback">Pilih jenis fasilitas.</div>
+    </div>
+    <div class="col-md-6"><label class="form-label" for="fNama">Nama fasilitas <span class="req">*</span></label><input class="form-control" id="fNama" required maxlength="100" value="{{ $v('nama') }}"><div class="invalid-feedback">Nama fasilitas wajib diisi.</div></div>
+    <div class="col-md-6">
+      <label class="form-label" for="fInduk">Gedung induk <span class="req">*</span></label>
+      <select class="form-select" id="fInduk"><option value="">Pilih gedung</option>@foreach($gedung as $g)<option @selected($v('lokasi') === $g['nama'])>{{ $g['nama'] }}</option>@endforeach<option>Gedung Fakultas</option></select>
+      <div class="invalid-feedback">Pilih gedung induk ruangan.</div>
+    </div>
+    <div class="col-md-6"><label class="form-label" for="fKategori">Kategori <span class="req">*</span></label><input class="form-control" id="fKategori" required maxlength="60" placeholder="Contoh: Elektronik" value="{{ $v('kategori') }}"><div class="invalid-feedback">Kategori wajib diisi.</div></div>
+    <div class="col-md-6"><label class="form-label" id="fJumlahLabel" for="fJumlah">Kapasitas / stok</label><input type="number" class="form-control" id="fJumlah" min="1" step="1" value="{{ $v('jumlah') }}"><div class="invalid-feedback">Isi angka bilangan bulat minimal 1.</div></div>
+    <div class="col-md-6"><label class="form-label" for="fPic">Penanggung jawab <span class="req">*</span></label><input class="form-control" id="fPic" required maxlength="80" value="{{ $v('pic') }}"><div class="invalid-feedback">Penanggung jawab wajib diisi.</div></div>
+    <div class="col-md-4"><label class="form-label" for="fKondisi">Kondisi</label><select class="form-select" id="fKondisi">@foreach(['Baik', 'Rusak', 'Pemeliharaan'] as $k)<option @selected($v('kondisi', 'Baik') === $k)>{{ $k }}</option>@endforeach</select></div>
+    <div class="col-md-4"><label class="form-label" for="fStatus">Status</label><select class="form-select" id="fStatus">@foreach(['Aktif', 'Tidak Aktif'] as $s)<option @selected($v('status', 'Aktif') === $s)>{{ $s }}</option>@endforeach</select></div>
+    <div class="col-md-4"><label class="form-label" for="fMaks">Waktu maksimal peminjaman</label><select class="form-select" id="fMaks">@foreach(['1 Hari', '2 Hari', '3 Hari', '1 Minggu'] as $m)<option @selected($v('maks', '1 Hari') === $m)>{{ $m }}</option>@endforeach</select></div>
+    <div class="col-12"><label class="form-label" for="fJadwal">Jadwal tersedia</label><input class="form-control" id="fJadwal" maxlength="60" placeholder="Contoh: Senin - Jumat" value="{{ $v('jadwal') }}"></div>
+    <div class="col-12"><label class="form-label" for="fDesk">Deskripsi</label><textarea class="form-control" id="fDesk" rows="3" maxlength="500">{{ $v('deskripsi') }}</textarea></div>
+    <div class="col-12">
+      <label class="form-label" for="fFoto">Foto fasilitas</label>
+      <div class="d-flex align-items-center gap-3">
+        <img id="fotoPreview" src="{{ $edit ? asset('img/' . $f['img']) : asset('img/gedung.svg') }}" alt="Pratinjau foto" style="width:120px;height:78px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">
+        <div class="flex-grow-1"><input type="file" class="form-control" id="fFoto" accept="image/*" data-preview="#fotoPreview"><div class="form-text">JPG/PNG, maksimal 2 MB.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="d-flex justify-content-end gap-2 mt-4">
+    <a class="btn btn-light" href="{{ route('admin.facilities') }}">Batal</a>
+    <button class="btn btn-primary" type="submit">{{ $edit ? 'Simpan Perubahan' : 'Simpan Fasilitas' }}</button>
+  </div>
+</form>
 @endsection
-
-@push('scripts')
-<script>
-(function () {
-    const type = document.getElementById('facilityType');
-
-    function toggle() {
-        const v = type.value;
-
-        document.getElementById('parentField').hidden = v !== 'ruangan';
-        document.getElementById('locationField').hidden = v !== 'gedung';
-        document.getElementById('categoryField').hidden = v !== 'barang';
-        document.getElementById('capacityField').hidden = v !== 'ruangan';
-        document.getElementById('stockField').hidden = v !== 'barang';
-        document.getElementById('damagedField').hidden = v !== 'barang';
-    }
-
-    type.addEventListener('change', toggle);
-    toggle();
-})();
-</script>
-@endpush

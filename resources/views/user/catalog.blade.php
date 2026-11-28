@@ -1,110 +1,36 @@
-
 @extends('layouts.app')
-
 @section('title', 'Katalog Fasilitas')
 @section('heading', 'Katalog Fasilitas')
+@section('subheading', 'Cari fasilitas yang kamu butuhkan.')
 
 @section('content')
-<div class="page-intro">
-    <div>
-        <h1>Katalog Fasilitas</h1>
-        <p class="muted">
-            Lihat fasilitas kampus yang aktif dan dalam kondisi baik.
-        </p>
+@php $items = collect(config('faslink.facilities'))->where('status', 'Aktif'); @endphp
+<div data-filter-scope>
+  <div class="card-soft mb-3 p-3">
+    <div class="search-box mb-3"><i class="bi bi-search"></i><input class="form-control" data-filter-search placeholder="Cari fasilitas..." aria-label="Cari fasilitas"></div>
+    <div class="filter-pills">
+      <button type="button" class="active" data-filter-pill="all">Semua</button>
+      <button type="button" data-filter-pill="gedung">Gedung</button>
+      <button type="button" data-filter-pill="ruangan">Ruangan</button>
+      <button type="button" data-filter-pill="barang">Barang</button>
     </div>
-</div>
+  </div>
 
-<div class="panel">
-    <form method="GET" class="row g-2 mb-4">
-        <div class="col-md-7">
-            <input
-                name="search"
-                value="{{ request('search') }}"
-                class="form-control"
-                placeholder="Cari nama fasilitas..."
-            >
+  <div class="row g-3">
+    @foreach($items as $f)
+      <div class="col-sm-6 col-xl-4" data-filter-item data-group="{{ $f['jenis'] }}" data-text="{{ $f['nama'] }} {{ $f['lokasi'] }} {{ $f['kategori'] }}">
+        <div class="facility-card">
+          <img src="{{ asset('img/' . $f['img']) }}" alt="{{ $f['nama'] }}">
+          <div class="body">
+            <div class="name"><span>{{ $f['nama'] }}</span>@if(! ($f['kondisi'] === 'Baik'))<span class="status warn">Tidak Tersedia</span>@endif</div>
+            <div class="meta">@include('partials.facility-meta', ['f' => $f])</div>
+            <div class="spacer"></div>
+            <a class="btn-detail" href="{{ route('user.facility.detail', $f['slug']) }}">Lihat Detail <i class="bi bi-arrow-right"></i></a>
+          </div>
         </div>
-
-        <div class="col-md-3">
-            <select name="type" class="form-select">
-                <option value="">Semua jenis</option>
-
-                @foreach([
-                    'gedung' => 'Gedung',
-                    'ruangan' => 'Ruangan',
-                    'barang' => 'Barang'
-                ] as $key => $label)
-                    <option
-                        value="{{ $key }}"
-                        @selected(request('type') === $key)
-                    >
-                        {{ $label }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="col-md-2">
-            <button class="btn btn-primary w-100">Cari</button>
-        </div>
-    </form>
-
-    <div class="row g-3">
-        @forelse($facilities as $facility)
-            <div class="col-md-6 col-xl-4">
-                <div class="border rounded-3 p-3 h-100">
-
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="badge text-bg-light">
-                            {{ ucfirst($facility->type) }}
-                        </span>
-
-                        <span class="badge text-bg-success">
-                            Tersedia
-                        </span>
-                    </div>
-
-                    <h5>{{ $facility->name }}</h5>
-
-                    <p class="text-muted small mb-2">
-                        @if($facility->type === 'ruangan')
-                            {{ $facility->parent?->name }}
-                        @else
-                            {{ $facility->location ?: 'Lokasi belum diisi' }}
-                        @endif
-                    </p>
-
-                    @if($facility->type === 'ruangan')
-                        <p class="small mb-3">
-                            Kapasitas: {{ $facility->capacity }} orang
-                        </p>
-                    @elseif($facility->type === 'barang')
-                        <p class="small mb-3">
-                            Stok tersedia: {{ $facility->available_stock }} unit
-                        </p>
-                    @else
-                        <p class="small mb-3">
-                            {{ Str::limit($facility->description, 80) }}
-                        </p>
-                    @endif
-
-                    <a
-                        href="{{ route('user.facility.detail', $facility) }}"
-                        class="btn btn-outline-primary btn-sm"
-                    >
-                        Lihat Detail
-                    </a>
-                </div>
-            </div>
-        @empty
-            <div class="col-12">
-                <div class="text-center text-muted py-5">
-                    Belum ada fasilitas yang tersedia.
-                </div>
-            </div>
-        @endforelse
-    </div>
-
-    {{ $facilities->links() }}
+      </div>
+    @endforeach
+  </div>
+  <div class="empty-state" data-filter-empty style="display:none"><i class="bi bi-search fs-3 d-block mb-2"></i>Fasilitas tidak ditemukan. Coba kata kunci atau filter lain.</div>
 </div>
 @endsection

@@ -1,45 +1,35 @@
 @extends('layouts.app')
-
-@section('title', 'Detail Fasilitas')
-@section('heading', 'Detail Fasilitas')
+@section('title', $f['nama'])
+@section('back')<a class="back-link" href="{{ route('user.catalog') }}"><i class="bi bi-arrow-left"></i> Kembali ke Katalog</a>@endsection
 
 @section('content')
-<a class="back-link" href="{{ route('user.catalog') }}">
-    <i class="bi bi-arrow-left"></i> Kembali ke katalog
-</a>
-
-<div class="panel mt-3">
-    <div class="d-flex justify-content-between align-items-start">
-        <div>
-            <span class="badge text-bg-light">{{ ucfirst($facility->type) }}</span>
-            <h2 class="mt-2">{{ $facility->name }}</h2>
-        </div>
-        <span class="badge text-bg-success">Aktif</span>
-    </div>
-
-    <hr>
-
-    <dl class="row mb-0">
-        <dt class="col-sm-3">Lokasi / Gedung induk</dt>
-        <dd class="col-sm-9">
-            {{ $facility->type === 'ruangan' ? ($facility->parent?->name ?? '-') : ($facility->location ?: '-') }}
-        </dd>
-
-        @if($facility->type === 'ruangan')
-            <dt class="col-sm-3">Kapasitas</dt>
-            <dd class="col-sm-9">{{ $facility->capacity }} orang</dd>
-        @endif
-
-        @if($facility->type === 'barang')
-            <dt class="col-sm-3">Stok tersedia</dt>
-            <dd class="col-sm-9">{{ $facility->available_stock }} dari {{ $facility->stock_total }} unit</dd>
-        @endif
-
-        <dt class="col-sm-3">Kondisi</dt>
-        <dd class="col-sm-9">{{ ucfirst($facility->condition) }}</dd>
-
-        <dt class="col-sm-3">Deskripsi</dt>
-        <dd class="col-sm-9">{{ $facility->description ?: 'Tidak ada deskripsi.' }}</dd>
-    </dl>
+@php $ok = $f['status'] === 'Aktif' && $f['kondisi'] === 'Baik'; @endphp
+<div class="detail-hero">
+  <img src="{{ asset('img/' . $f['img']) }}" alt="{{ $f['nama'] }}">
+  <div class="py-2 pe-2">
+    <h1>{{ $f['nama'] }} @include('partials.facility-badge', ['f' => $f])</h1>
+    <div class="info-line"><i class="bi bi-geo-alt"></i>{{ $f['jenis'] === 'gedung' ? 'Area ' . $f['lokasi'] : $f['lokasi'] }}</div>
+    @if($f['jenis'] === 'ruangan')<div class="info-line"><i class="bi bi-people"></i>Kapasitas: {{ $f['jumlah'] }} orang</div>@endif
+    @if($f['jenis'] === 'barang')<div class="info-line"><i class="bi bi-box-seam"></i>Stok: {{ $f['jumlah'] }} unit</div>@endif
+    <p class="mt-3 mb-0 text-secondary">{{ $f['deskripsi'] }}</p>
+  </div>
 </div>
+
+<div class="card-soft mb-3">
+  <h3>Informasi Peminjaman</h3>
+  <dl class="info-table single mb-0">
+    <dt><i class="bi bi-calendar3"></i>Jadwal Tersedia</dt><dd>{{ $f['jadwal'] }}</dd>
+    <dt><i class="bi bi-clock"></i>Waktu Maksimal</dt><dd>{{ $f['maks'] }}</dd>
+    <dt><i class="bi bi-tag"></i>Kategori</dt><dd>{{ $f['kategori'] }}</dd>
+    <dt><i class="bi bi-shield-check"></i>Kondisi</dt><dd>{{ $f['kondisi'] }}</dd>
+    <dt><i class="bi bi-person-badge"></i>Penanggung Jawab</dt><dd>{{ $f['pic'] }}</dd>
+  </dl>
+</div>
+
+@if($ok)
+  <a class="btn btn-primary btn-block" href="{{ route('user.loan.create', ['fasilitas' => $f['slug']]) }}">Ajukan Peminjaman <i class="bi bi-arrow-right"></i></a>
+@else
+  <button class="btn btn-primary btn-block" disabled>Ajukan Peminjaman</button>
+  <p class="text-center muted small mt-2 mb-0">Fasilitas ini sedang tidak dapat dipinjam ({{ $f['kondisi'] === 'Baik' ? 'tidak aktif' : strtolower($f['kondisi']) }}).</p>
+@endif
 @endsection

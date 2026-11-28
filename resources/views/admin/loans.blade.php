@@ -1,128 +1,29 @@
-
 @extends('layouts.app')
-
 @section('title', 'Daftar Pengajuan')
 @section('heading', 'Daftar Pengajuan')
+@section('subheading', 'Pantau seluruh pengajuan yang dikirim mahasiswa.')
 
 @section('content')
-
-<div class="page-intro">
-    <div>
-        <h1>Seluruh Pengajuan</h1>
-        <p class="muted">Cari, filter, dan buka detail pengajuan peminjaman mahasiswa.</p>
-    </div>
-</div>
-
-<div class="panel mb-3">
-    <form method="GET" action="{{ route('admin.loans') }}">
-        <div class="row g-2 align-items-end">
-            <div class="col-lg-5">
-                <label class="form-label">Cari pengajuan</label>
-                <input type="search" name="keyword" class="form-control"
-                    value="{{ request('keyword') }}"
-                    placeholder="Kode, nama pemohon, atau kegiatan">
-            </div>
-
-            <div class="col-lg-3">
-                <label class="form-label">Status</label>
-                <select name="status" class="form-select">
-                    <option value="">Semua status</option>
-                    @foreach([
-                        'pending' => 'Menunggu',
-                        'approved' => 'Disetujui',
-                        'rejected' => 'Ditolak',
-                        'completed' => 'Selesai',
-                        'cancelled' => 'Dibatalkan'
-                    ] as $value => $label)
-                        <option value="{{ $value }}" @selected(request('status') === $value)>
-                            {{ $label }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="col-lg-2">
-                <label class="form-label">Tanggal mulai</label>
-                <input type="date" name="date" class="form-control"
-                    value="{{ request('date') }}">
-            </div>
-
-            <div class="col-lg-2 d-flex gap-2">
-                <button class="btn btn-primary flex-grow-1" type="submit">
-                    Filter
-                </button>
-                <a href="{{ route('admin.loans') }}" class="btn btn-light">
-                    Reset
-                </a>
-            </div>
-        </div>
-    </form>
-</div>
-
-@if(session('success'))
-    <div class="alert alert-success">
-        {{ session('success') }}
-    </div>
-@endif
-
-<div class="panel table-responsive">
+@php $fac = collect(config('faslink.facilities'))->keyBy('slug'); $label = config('faslink.status'); @endphp
+<div class="card-soft" data-filter-scope>
+  <div class="row g-2 mb-3">
+    <div class="col-md-7"><div class="search-box"><i class="bi bi-search"></i><input class="form-control" data-filter-search placeholder="Cari kode, pemohon, atau kegiatan..." aria-label="Cari pengajuan"></div></div>
+    <div class="col-md-5"><select class="form-select" data-filter-select="status" aria-label="Filter status"><option value="all">Semua status</option>@foreach($label as $k => $t)<option value="{{ $k }}">{{ $t }}</option>@endforeach</select></div>
+  </div>
+  <div class="table-responsive">
     <table class="table align-middle">
-        <thead>
-            <tr>
-                <th>Kode</th>
-                <th>Pemohon</th>
-                <th>Kegiatan</th>
-                <th>Fasilitas</th>
-                <th>Jadwal</th>
-                <th>Status</th>
-                <th>Detail</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @forelse($loans as $loan)
-                <tr>
-                    <td><strong>{{ $loan->code }}</strong></td>
-                    <td>{{ $loan->user->name ?? $loan->responsible_name }}</td>
-                    <td>{{ $loan->activity_name }}</td>
-                    <td>{{ $loan->facility_name }}</td>
-                    <td>
-                        {{ $loan->start_at->format('d M Y') }}<br>
-                        <small class="text-muted">
-                            {{ $loan->start_at->format('H:i') }} -
-                            {{ $loan->end_at->format('H:i') }}
-                        </small>
-                    </td>
-                    <td>
-                        <span class="status {{ $loan->status }}">
-                            {{ [
-                                'pending' => 'Menunggu',
-                                'approved' => 'Disetujui',
-                                'rejected' => 'Ditolak',
-                                'completed' => 'Selesai',
-                                'cancelled' => 'Dibatalkan'
-                            ][$loan->status] ?? ucfirst($loan->status) }}
-                        </span>
-                    </td>
-                    <td>
-                        <a href="{{ route('admin.loan.detail', $loan->id) }}">
-                            Buka detail
-                        </a>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="7" class="text-center text-muted py-4">
-                        Belum ada pengajuan yang sesuai filter.
-                    </td>
-                </tr>
-            @endforelse
-        </tbody>
+      <thead><tr><th>Kode</th><th>Pemohon</th><th>Kegiatan</th><th>Fasilitas</th><th>Tanggal Pinjam</th><th>Status</th><th>Aksi</th></tr></thead>
+      <tbody>
+        @foreach(config('faslink.loans') as $l)
+          <tr data-filter-item data-group="all" data-status="{{ $l['status'] }}" data-text="{{ $l['kode'] }} {{ $l['pemohon'] }} {{ $l['kegiatan'] }} {{ $fac[$l['fasilitas']]['nama'] }}">
+            <td>#{{ $l['kode'] }}</td><td>{{ $l['pemohon'] }}</td><td>{{ $l['kegiatan'] }}</td><td>{{ $fac[$l['fasilitas']]['nama'] }}</td><td>{{ $l['tgl'] }}</td>
+            <td><span class="status {{ $l['status'] }}">{{ $label[$l['status']] }}</span></td>
+            <td><a class="btn-view" href="{{ route('admin.verification', $l['kode']) }}">{{ $l['status'] === 'pending' ? 'Verifikasi' : 'Lihat' }}</a></td>
+          </tr>
+        @endforeach
+        <tr class="table-empty" data-filter-empty style="display:none"><td colspan="7">Pengajuan tidak ditemukan.</td></tr>
+      </tbody>
     </table>
-
-    <div class="p-3">
-        {{ $loans->links() }}
-    </div>
+  </div>
 </div>
-
 @endsection

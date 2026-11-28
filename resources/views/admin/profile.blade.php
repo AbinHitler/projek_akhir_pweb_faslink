@@ -1,2 +1,8 @@
-@extends('layouts.app') @section('title','Pengaturan Akun') @section('heading','Pengaturan Akun')
-@section('content')<div class="page-intro"><div><h1>Pengaturan Akun</h1><p class="muted">Perbarui informasi akun administrator.</p></div></div><div class="panel"><form class="demo-form" data-success="Pengaturan akun tersimpan (demo)."><div class="row g-3"><div class="col-md-6"><label class="form-label">Nama</label><input class="form-control" value="Admin Sarpras"></div><div class="col-md-6"><label class="form-label">Email</label><input type="email" class="form-control" value="sarpras@unej.ac.id"></div><div class="col-md-6"><label class="form-label">Password baru</label><input type="password" class="form-control"></div><div class="col-md-6"><label class="form-label">Konfirmasi password</label><input type="password" class="form-control"></div></div><div class="text-end mt-4"><button class="btn btn-primary">Simpan Perubahan</button></div></form></div>@endsection
+@extends('layouts.app')
+@section('title', 'Pengaturan Akun')
+@section('heading', 'Pengaturan Akun')
+@section('subheading', 'Kelola informasi akun administrator.')
+
+@section('content')
+  @include('partials.account-settings', ['me' => config('faslink.admin'), 'idLabel' => 'ID Admin', 'idValue' => config('faslink.admin.id')])
+@endsection

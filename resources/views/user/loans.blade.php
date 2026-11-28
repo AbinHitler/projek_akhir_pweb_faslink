@@ -1,109 +1,42 @@
 @extends('layouts.app')
-
 @section('title', 'Pengajuan Saya')
 @section('heading', 'Pengajuan Saya')
+@section('subheading', 'Pantau status pengajuan peminjamanmu di sini.')
 
 @section('content')
-<div class="page-intro">
-    <div>
-        <h1>Pengajuan Saya</h1>
-        <p class="muted">Pantau status pengajuan peminjaman fasilitasmu.</p>
+@php
+    $fac = collect(config('faslink.facilities'))->keyBy('slug');
+    $mine = collect(config('faslink.loans'))->where('pemohon', config('faslink.user.nama'))->values();
+    $label = config('faslink.status');
+@endphp
+<div data-filter-scope>
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div class="filter-pills">
+      <button type="button" class="active" data-filter-pill="all">Semua</button>
+      <button type="button" data-filter-pill="pending">Menunggu</button>
+      <button type="button" data-filter-pill="approved">Disetujui</button>
+      <button type="button" data-filter-pill="rejected">Ditolak</button>
+      <button type="button" data-filter-pill="completed">Selesai</button>
     </div>
-
-    <a class="btn btn-primary" href="{{ route('user.loan.create') }}">
-        <i class="bi bi-plus-lg me-1"></i>Buat Pengajuan
-    </a>
-</div>
-
-@if (session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-
-<div class="filter-pills mb-3">
-    <button class="active" data-status-filter="all">Semua</button>
-    <button data-status-filter="pending">Menunggu</button>
-    <button data-status-filter="approved">Disetujui</button>
-    <button data-status-filter="rejected">Ditolak</button>
-    <button data-status-filter="completed">Selesai</button>
-</div>
-
-<div class="panel table-responsive">
+    <a class="btn btn-primary" href="{{ route('user.loan.create') }}"><i class="bi bi-plus-lg me-1"></i>Buat Pengajuan</a>
+  </div>
+  <div class="card-soft table-responsive">
     <table class="table align-middle">
-        <thead>
-            <tr>
-                <th>Kode</th>
-                <th>Kegiatan</th>
-                <th>Fasilitas</th>
-                <th>Tanggal</th>
-                <th>Status</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-
-        <tbody id="loanRows">
-            @forelse($loans as $loan)
-                <tr data-status="{{ $loan->status }}">
-                    <td>{{ $loan->code }}</td>
-                    <td>{{ $loan->activity_name }}</td>
-                    <td>{{ $loan->facility_name }}</td>
-                    <td>{{ $loan->start_at->format('d M Y H:i') }}</td>
-
-                    <td>
-                        <span class="status {{ $loan->status }}">
-                            {{ [
-                                'pending' => 'Menunggu',
-                                'approved' => 'Disetujui',
-                                'rejected' => 'Ditolak',
-                                'completed' => 'Selesai',
-                                'cancelled' => 'Dibatalkan'
-                            ][$loan->status] ?? ucfirst($loan->status) }}
-                        </span>
-                    </td>
-
-                    <td>
-                        <div class="d-flex align-items-center gap-2">
-                            <a href="{{ route('user.loan.detail', $loan->id) }}">
-                                Detail
-                            </a>
-
-                            @if($loan->status === 'pending')
-                                <a href="{{ route('user.loan.edit', $loan->id) }}">
-                                    Edit
-                                </a>
-
-                                <form
-                                    action="{{ route('user.loan.destroy', $loan->id) }}"
-                                    method="POST"
-                                    onsubmit="return confirm('Yakin ingin membatalkan pengajuan ini?')">
-
-                                    @csrf
-                                    @method('DELETE')
-
-                                    <button
-                                        type="submit"
-                                        class="btn btn-sm btn-outline-danger">
-                                        Batalkan
-                                    </button>
-                                </form>
-                            @endif
-                        </div>
-                    </td>
-                </tr>
-
-            @empty
-                <tr>
-                    <td colspan="6" class="text-center text-muted py-4">
-                        Belum ada pengajuan. Klik “Buat Pengajuan” untuk memulai.
-                    </td>
-                </tr>
-            @endforelse
-        </tbody>
+      <thead><tr><th>No.</th><th>Tanggal</th><th>Fasilitas</th><th>Tujuan</th><th>Status</th><th>Aksi</th></tr></thead>
+      <tbody>
+        @foreach($mine as $i => $l)
+          <tr data-filter-item data-group="{{ $l['status'] }}" data-text="{{ $l['kode'] }} {{ $fac[$l['fasilitas']]['nama'] }} {{ $l['tujuan'] }}">
+            <td>{{ $i + 1 }} <span class="muted">#{{ $l['kode'] }}</span></td>
+            <td>{{ $l['diajukan'] }}</td>
+            <td>{{ $fac[$l['fasilitas']]['nama'] }}</td>
+            <td>{{ $l['tujuan'] }}</td>
+            <td><span class="status {{ $l['status'] }}">{{ $label[$l['status']] }}</span></td>
+            <td><a class="btn-view" href="{{ route('user.loan.detail', $l['kode']) }}">Lihat</a></td>
+          </tr>
+        @endforeach
+        <tr class="table-empty" data-filter-empty style="display:none"><td colspan="6">Tidak ada pengajuan dengan status ini.</td></tr>
+      </tbody>
     </table>
-
-    @if($loans->hasPages())
-        <div class="p-3">
-            {{ $loans->links() }}
-        </div>
-    @endif
+  </div>
 </div>
 @endsection

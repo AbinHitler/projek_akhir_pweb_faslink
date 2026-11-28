@@ -1,50 +1,41 @@
 @extends('layouts.app')
-
 @section('title', 'Dashboard Mahasiswa')
-@section('heading', 'Dashboard')
+@section('heading', 'Halo, ' . config('faslink.user.nama') . '! 👋')
+@section('subheading', 'Selamat datang di FASLINK. Yuk, pinjam fasilitas kampus dengan mudah.')
 
 @section('content')
-<div class="welcome-row simple-welcome">
+@php
+    $r = config('faslink.ringkasan');
+    $fac = collect(config('faslink.facilities'))->keyBy('slug');
+    $recent = collect(config('faslink.loans'))->where('pemohon', config('faslink.user.nama'))->take(3);
+    $label = config('faslink.status');
+@endphp
+<div class="row g-3 mb-3">
+  <div class="col-md-4"><div class="stat-tile"><span class="stat-icon blue"><i class="bi bi-bank"></i></span><div><strong>{{ $r['gedung'] }}</strong><small>Gedung</small></div></div></div>
+  <div class="col-md-4"><div class="stat-tile"><span class="stat-icon cream"><i class="bi bi-door-open"></i></span><div><strong>{{ $r['ruangan'] }}</strong><small>Ruangan</small></div></div></div>
+  <div class="col-md-4"><div class="stat-tile"><span class="stat-icon blue"><i class="bi bi-box-seam"></i></span><div><strong>{{ $r['barang'] }}</strong><small>Barang</small></div></div></div>
+</div>
+
+<div class="hero-panel mb-3">
   <div>
-    <h1>Halo, Budi Santoso</h1>
-    <p class="muted">Cari fasilitas kampus dan ajukan peminjaman untuk kegiatanmu.</p>
+    <h2>Pinjam Fasilitas Kampus<br>Lebih Mudah dengan FASLINK!</h2>
+    <p>Cari, ajukan, dan pantau peminjaman fasilitas kampus dalam satu sistem.</p>
+    <a href="{{ route('user.catalog') }}" class="btn btn-primary">Cari Fasilitas <i class="bi bi-arrow-right ms-1"></i></a>
   </div>
-  <a class="btn btn-primary" href="{{ route('user.catalog') }}">Lihat Fasilitas</a>
+  <img src="{{ asset('img/hero.svg') }}" alt="">
 </div>
 
-<div class="simple-intro mb-4">
-  <h2>Peminjaman fasilitas kampus</h2>
-  <p>Temukan gedung, ruangan, atau barang yang kamu butuhkan. Ajukan peminjaman secara online dan pantau statusnya melalui halaman pengajuan.</p>
-  <a href="{{ route('user.catalog') }}" class="text-link">Buka katalog fasilitas <i class="bi bi-arrow-right"></i></a>
-</div>
-
-<div class="panel">
-  <div class="section-heading mt-0">
-    <h3>Pengajuan terbaru</h3>
-    <a href="{{ route('user.loans') }}">Lihat semua</a>
-  </div>
-
-  <div class="table-responsive">
-    <table class="table align-middle mb-0">
-      <thead>
-        <tr>
-          <th>Kode</th>
-          <th>Kegiatan</th>
-          <th>Tanggal</th>
-          <th>Status</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>#PJ-001</td>
-          <td>Seminar Nasional Teknologi</td>
-          <td>20 November 2026</td>
-          <td><span class="status pending">Menunggu</span></td>
-          <td><a href="{{ route('user.loans') }}">Detail</a></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+<div class="card-soft">
+  <div class="section-head"><h3>Pengajuan Terbaru</h3><a href="{{ route('user.loans') }}">Lihat Semua <i class="bi bi-chevron-right"></i></a></div>
+  @forelse($recent as $l)
+    <div class="list-row">
+      <span class="ico"><i class="bi bi-calendar-check"></i></span>
+      <div class="grow"><b>Peminjaman {{ $fac[$l['fasilitas']]['nama'] }}</b><small>{{ $l['diajukan'] }}</small></div>
+      <span class="status {{ $l['status'] }}">{{ $label[$l['status']] }}</span>
+      <a class="text-link" href="{{ route('user.loan.detail', $l['kode']) }}" aria-label="Lihat detail {{ $l['kode'] }}"><i class="bi bi-chevron-right"></i></a>
+    </div>
+  @empty
+    <div class="empty-state">Belum ada pengajuan. <a href="{{ route('user.catalog') }}">Cari fasilitas</a> untuk memulai.</div>
+  @endforelse
 </div>
 @endsection

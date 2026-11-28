@@ -1,106 +1,94 @@
 @extends('layouts.app')
-
-@section('title', 'Form Pengajuan')
-@section('heading', 'Pengajuan Peminjaman')
+@section('title', 'Form Pengajuan Peminjaman')
+@section('heading', 'Form Pengajuan Peminjaman')
+@section('subheading', 'Lengkapi langkah-langkah berikut untuk mengajukan peminjaman.')
 
 @section('content')
-<div class="page-intro">
-    <div>
-        <h1>Form Pengajuan Peminjaman</h1>
-        <p class="muted">Lengkapi informasi kegiatan dan fasilitas yang ingin dipinjam.</p>
+@php
+    $all = collect(config('faslink.facilities'))->where('status', 'Aktif');
+    $selSlug = ($selected && $selected['status'] === 'Aktif' && $selected['kondisi'] === 'Baik') ? $selected['slug'] : '';
+    $me = config('faslink.user');
+@endphp
+<form id="loanWizard" class="card-soft" novalidate data-selected="{{ $selSlug }}" data-done="{{ route('user.loans') }}">
+  <div class="stepper">
+    <div class="step active"><span>1</span>Pilih Fasilitas</div>
+    <div class="step"><span>2</span>Isi Detail</div>
+    <div class="step"><span>3</span>Konfirmasi</div>
+  </div>
+
+  {{-- LANGKAH 1 --}}
+  <div data-step="1">
+    <h3>Pilih Fasilitas</h3>
+    <input type="hidden" id="facilityInput" name="fasilitas">
+    <div id="pickedBox" class="selected-facility d-none">
+      <img id="pickedImg" src="" alt="">
+      <div class="grow"><b id="pickedName"></b><br><small id="pickedLoc"></small></div>
+      <button type="button" class="btn btn-sm btn-link text-decoration-none fw-bold" id="changeFacility">Ubah</button>
     </div>
-</div>
-
-@if ($errors->any())
-    <div class="alert alert-danger">
-        <strong>Pengajuan belum dapat dikirim.</strong>
-        <ul class="mb-0 mt-2">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
+    <div id="pickGrid" class="pick-grid">
+      @foreach($all as $f)
+        @php $ok = $f['kondisi'] === 'Baik'; @endphp
+        <button type="button" class="pick-card {{ $ok ? '' : 'disabled' }}" @if(! $ok) disabled @endif
+          data-slug="{{ $f['slug'] }}" data-nama="{{ $f['nama'] }}" data-lokasi="{{ $f['lokasi'] }}" data-jenis="{{ $f['jenis'] }}" data-jumlah="{{ $f['jumlah'] }}" data-img="{{ asset('img/' . $f['img']) }}">
+          <img src="{{ asset('img/' . $f['img']) }}" alt="">
+          <b>{{ $f['nama'] }}</b>
+          <small>{{ $ok ? $f['lokasi'] : 'Tidak tersedia' }}</small>
+        </button>
+      @endforeach
     </div>
-@endif
+    <div id="qtyBox" class="mt-3 d-none" style="max-width:220px">
+      <label class="form-label" for="qty">Jumlah unit <span class="req">*</span></label>
+      <input type="number" class="form-control" id="qty" min="1" value="1" step="1">
+      <div class="form-text" id="qtyHint"></div>
+      <div class="invalid-feedback">Jumlah harus 1 sampai stok yang tersedia.</div>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-4">
+      <a class="btn btn-light" href="{{ route('user.catalog') }}">Batal</a>
+      <button type="button" class="btn btn-primary" data-next>Lanjutkan <i class="bi bi-arrow-right ms-1"></i></button>
+    </div>
+  </div>
 
-<div class="panel">
-    <form action="{{ route('user.loan.store') }}" method="POST" enctype="multipart/form-data">
-        @csrf
+  {{-- LANGKAH 2 --}}
+  <div data-step="2" class="d-none">
+    <h3>Isi Detail Peminjaman</h3>
+    <div id="detailFields" class="row g-3">
+      <div class="col-md-6"><label class="form-label" for="kegiatan">Nama kegiatan <span class="req">*</span></label><input class="form-control" id="kegiatan" required maxlength="100" placeholder="Contoh: Seminar Program Kreativitas Mahasiswa"><div class="invalid-feedback">Nama kegiatan wajib diisi.</div></div>
+      <div class="col-md-6"><label class="form-label" for="org">Organisasi / UKM</label><input class="form-control" id="org" maxlength="100" placeholder="Nama organisasi (opsional)"></div>
+      <div class="col-md-6"><label class="form-label" for="tglPinjam">Tanggal peminjaman <span class="req">*</span></label><input type="date" class="form-control" id="tglPinjam" required><div class="invalid-feedback">Pilih tanggal hari ini atau setelahnya.</div></div>
+      <div class="col-md-6"><label class="form-label" for="waktu">Waktu <span class="req">*</span></label><select class="form-select" id="waktu" required>@foreach(config('faslink.waktu') as $w)<option>{{ $w }}</option>@endforeach</select></div>
+      <div class="col-12"><label class="form-label" for="tujuan">Tujuan kegiatan <span class="req">*</span></label><textarea class="form-control" id="tujuan" rows="3" required minlength="10" maxlength="500" placeholder="Contoh: Seminar Program Kreativitas Mahasiswa"></textarea><div class="invalid-feedback">Tujuan kegiatan wajib diisi (minimal 10 karakter).</div></div>
+      <div class="col-md-4"><label class="form-label" for="pj">Penanggung jawab <span class="req">*</span></label><input class="form-control" id="pj" required value="{{ $me['nama'] }}"><div class="invalid-feedback">Wajib diisi.</div></div>
+      <div class="col-md-4"><label class="form-label" for="kontak">Kontak penanggung jawab <span class="req">*</span></label><input class="form-control" id="kontak" required inputmode="tel" pattern="08[0-9]{8,11}" value="{{ $me['telp'] }}" placeholder="08xxxxxxxxxx"><div class="invalid-feedback">Gunakan nomor HP yang diawali 08 (10-13 digit).</div></div>
+      <div class="col-md-4"><label class="form-label" for="peserta">Jumlah peserta <span class="req">*</span></label><input type="number" class="form-control" id="peserta" required min="1" step="1"><div class="invalid-feedback" id="pesertaMsg">Isi jumlah peserta (minimal 1, tidak melebihi kapasitas).</div></div>
+      <div class="col-12"><label class="form-label" for="dokumen">Proposal / dokumen pendukung</label><input type="file" class="form-control" id="dokumen" accept=".pdf,.doc,.docx"><div class="form-text">Format PDF, DOC, atau DOCX. Maksimal 2 MB.</div><div class="invalid-feedback d-block" id="dokumenMsg"></div></div>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-4">
+      <button type="button" class="btn btn-light" data-prev>Kembali</button>
+      <button type="button" class="btn btn-primary" data-next>Lanjutkan <i class="bi bi-arrow-right ms-1"></i></button>
+    </div>
+  </div>
 
-        <h3 class="form-section-title">1. Informasi Kegiatan</h3>
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label">Nama kegiatan *</label>
-                <input name="activity_name" class="form-control" required maxlength="150" value="{{ old('activity_name') }}" placeholder="Contoh: Seminar Nasional">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Organisasi / UKM</label>
-                <input name="organization" class="form-control" maxlength="150" value="{{ old('organization') }}" placeholder="Nama organisasi">
-            </div>
-            <div class="col-12">
-                <label class="form-label">Deskripsi / tujuan kegiatan *</label>
-                <textarea name="description" class="form-control" rows="3" required>{{ old('description') }}</textarea>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Penanggung jawab *</label>
-                <input name="responsible_name" class="form-control" required maxlength="150" value="{{ old('responsible_name') }}">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Kontak penanggung jawab *</label>
-                <input name="responsible_contact" class="form-control" required maxlength="30" value="{{ old('responsible_contact') }}" placeholder="08xxxxxxxxxx">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Jumlah peserta *</label>
-                <input name="participant_count" type="number" min="1" class="form-control" required value="{{ old('participant_count') }}">
-            </div>
-        </div>
-
-        <hr>
-
-        <h3 class="form-section-title">2. Jadwal Peminjaman</h3>
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label">Tanggal mulai *</label>
-                <input id="start_at" name="start_at" type="datetime-local" class="form-control" required value="{{ old('start_at') }}">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Tanggal selesai *</label>
-                <input id="end_at" name="end_at" type="datetime-local" class="form-control" required value="{{ old('end_at') }}">
-            </div>
-        </div>
-
-        <hr>
-
-        <h3 class="form-section-title">3. Fasilitas yang Dipinjam</h3>
-        <div class="row g-3">
-            <div class="col-md-8">
-                <label class="form-label">Pilih fasilitas *</label>
-                <select id="facility_name" name="facility_name" class="form-select" required>
-                    <option value="">Pilih fasilitas</option>
-                    @foreach(['Aula Serbaguna', 'Ruang Seminar', 'Proyektor', 'Sound System'] as $facility)
-                        <option value="{{ $facility }}" @selected(old('facility_name') === $facility)>{{ $facility }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Jumlah barang</label>
-                <input name="quantity" type="number" min="1" value="{{ old('quantity', 1) }}" class="form-control" required>
-            </div>
-            <div class="col-12">
-                <label class="form-label">Proposal / dokumen persyaratan (PDF/DOC/DOCX, maks. 5 MB)</label>
-                <input name="document" type="file" class="form-control" accept=".pdf,.doc,.docx">
-            </div>
-            <div class="col-12">
-                <label class="form-label">Catatan tambahan</label>
-                <textarea name="additional_notes" class="form-control" rows="2">{{ old('additional_notes') }}</textarea>
-            </div>
-        </div>
-
-        @include('user.partials.availability-calendar')
-
-        <div class="d-flex justify-content-end gap-2 mt-4">
-            <a class="btn btn-light" href="{{ route('user.catalog') }}">Batal</a>
-            <button class="btn btn-primary" type="submit">Kirim Pengajuan <i class="bi bi-send ms-1"></i></button>
-        </div>
-    </form>
-</div>
+  {{-- LANGKAH 3 --}}
+  <div data-step="3" class="d-none">
+    <h3>Konfirmasi Pengajuan</h3>
+    <p class="muted">Periksa kembali data pengajuanmu sebelum dikirim.</p>
+    <dl class="confirm-list">
+      <dt>Fasilitas</dt><dd id="cFasilitas"></dd>
+      <dt>Tanggal</dt><dd id="cTanggal"></dd>
+      <dt>Waktu</dt><dd id="cWaktu"></dd>
+      <dt>Nama kegiatan</dt><dd id="cKegiatan"></dd>
+      <dt>Organisasi / UKM</dt><dd id="cOrg"></dd>
+      <dt>Tujuan</dt><dd id="cTujuan"></dd>
+      <dt>Penanggung jawab</dt><dd id="cPj"></dd>
+      <dt>Kontak</dt><dd id="cKontak"></dd>
+      <dt>Jumlah peserta</dt><dd id="cPeserta"></dd>
+      <dt>Dokumen</dt><dd id="cDok"></dd>
+    </dl>
+    <div class="form-check mt-3"><input class="form-check-input" type="checkbox" id="agree"><label class="form-check-label" for="agree">Saya menyatakan data di atas benar dan bersedia menjaga fasilitas yang dipinjam.</label><div class="invalid-feedback">Centang pernyataan ini untuk melanjutkan.</div></div>
+    <div class="d-flex justify-content-end gap-2 mt-4">
+      <button type="button" class="btn btn-light" data-prev>Kembali</button>
+      <button type="submit" class="btn btn-primary">Kirim Pengajuan <i class="bi bi-send ms-1"></i></button>
+    </div>
+  </div>
+</form>
 @endsection

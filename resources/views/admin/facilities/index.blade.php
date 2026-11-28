@@ -1,170 +1,53 @@
-
 @extends('layouts.app')
-
-@section('title', 'Manajemen Fasilitas')
-@section('heading', 'Manajemen Fasilitas')
+@section('title', 'Kelola Fasilitas')
+@section('heading', 'Kelola Fasilitas')
+@section('subheading', 'Kelola data gedung, ruangan, barang, kategori, stok, dan kondisi.')
 
 @section('content')
-
-<div class="page-intro">
-    <div>
-        <h1>Manajemen Fasilitas</h1>
-        <p class="muted">Kelola data gedung, ruangan, dan barang inventaris kampus.</p>
+@php
+    $items = collect(config('faslink.facilities'));
+    // Fasilitas yang masih dipakai pengajuan aktif tidak boleh dihapus.
+    $inUse = collect(config('faslink.loans'))->whereIn('status', ['pending', 'approved', 'in-use'])->pluck('fasilitas')->unique()->all();
+@endphp
+<div data-filter-scope>
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div class="filter-pills">
+      <button type="button" class="active" data-filter-pill="all">Semua</button>
+      <button type="button" data-filter-pill="gedung">Gedung</button>
+      <button type="button" data-filter-pill="ruangan">Ruangan</button>
+      <button type="button" data-filter-pill="barang">Barang</button>
     </div>
-    <a class="btn btn-primary" href="{{ route('admin.facilities.create') }}">
-        <i class="bi bi-plus-lg me-1"></i>Tambah Fasilitas
-    </a>
-</div>
-
-@if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-
-@if(session('error'))
-    <div class="alert alert-danger">{{ session('error') }}</div>
-@endif
-
-@if($errors->any())
-    <div class="alert alert-danger">{{ $errors->first() }}</div>
-@endif
-
-<div class="row g-3 mb-4">
-    @foreach([
-        ['Gedung', 'gedung', 'bi-buildings'],
-        ['Ruangan', 'ruangan', 'bi-door-open'],
-        ['Barang', 'barang', 'bi-box-seam']
-    ] as $item)
-        <div class="col-md-4">
-            <div class="panel d-flex justify-content-between align-items-center">
-                <div>
-                    <small class="text-muted">Total {{ $item[0] }}</small>
-                    <h3 class="mb-0">{{ $counts[$item[1]] }}</h3>
-                </div>
-                <i class="bi {{ $item[2] }} fs-2 text-primary"></i>
-            </div>
-        </div>
-    @endforeach
-</div>
-
-<div class="panel">
-    <form method="GET" class="row g-2 mb-3">
-        <div class="col-md-5">
-            <input name="search" value="{{ request('search') }}"
-                class="form-control" placeholder="Cari nama fasilitas...">
-        </div>
-
-        <div class="col-md-3">
-            <select name="type" class="form-select">
-                <option value="">Semua jenis</option>
-                @foreach(['gedung'=>'Gedung','ruangan'=>'Ruangan','barang'=>'Barang'] as $key => $label)
-                    <option value="{{ $key }}" @selected(request('type') === $key)>
-                        {{ $label }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="col-md-2">
-            <select name="status" class="form-select">
-                <option value="">Semua status</option>
-                <option value="aktif" @selected(request('status') === 'aktif')>Aktif</option>
-                <option value="tidak_aktif" @selected(request('status') === 'tidak_aktif')>Tidak aktif</option>
-            </select>
-        </div>
-
-        <div class="col-md-2 d-flex gap-2">
-            <button class="btn btn-primary w-100">Filter</button>
-            <a href="{{ route('admin.facilities') }}" class="btn btn-light">Reset</a>
-        </div>
-    </form>
-
+    <a class="btn btn-primary" href="{{ route('admin.facilities.create') }}"><i class="bi bi-plus-lg me-1"></i>Tambah Fasilitas</a>
+  </div>
+  <div class="card-soft">
+    <div class="row g-2 mb-3">
+      <div class="col-md-7"><div class="search-box"><i class="bi bi-search"></i><input class="form-control" data-filter-search placeholder="Cari nama, lokasi, atau kategori..." aria-label="Cari fasilitas"></div></div>
+      <div class="col-md-5"><select class="form-select" data-filter-select="status" aria-label="Filter status"><option value="all">Semua status</option><option value="Aktif">Aktif</option><option value="Tidak Aktif">Tidak Aktif</option></select></div>
+    </div>
     <div class="table-responsive">
-        <table class="table align-middle">
-            <thead>
-                <tr>
-                    <th>Nama Fasilitas</th>
-                    <th>Jenis</th>
-                    <th>Lokasi / Gedung Induk</th>
-                    <th>Kapasitas / Stok</th>
-                    <th>Kondisi</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @forelse($facilities as $facility)
-                    <tr>
-                        <td>
-                            <strong>{{ $facility->name }}</strong>
-                            @if($facility->category)
-                                <div class="small text-muted">{{ $facility->category->name }}</div>
-                            @endif
-                        </td>
-
-                        <td>{{ ucfirst($facility->type) }}</td>
-
-                        <td>
-                            {{ $facility->type === 'ruangan'
-                                ? ($facility->parent?->name ?? '-')
-                                : ($facility->location ?: '-') }}
-                        </td>
-
-                        <td>
-                            @if($facility->type === 'ruangan')
-                                {{ $facility->capacity }} orang
-                            @elseif($facility->type === 'barang')
-                                <div>{{ $facility->available_stock }} tersedia</div>
-                                <small class="text-muted">
-                                    Total: {{ $facility->stock_total }}
-                                    - Rusak: {{ $facility->stock_damaged }}
-                                </small>
-                            @else
-                                -
-                            @endif
-                        </td>
-
-                        <td>
-                            <span class="badge text-bg-{{ $facility->condition === 'baik' ? 'success' : ($facility->condition === 'rusak' ? 'danger' : 'warning') }}">
-                                {{ ucfirst($facility->condition) }}
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="badge text-bg-{{ $facility->status === 'aktif' ? 'primary' : 'secondary' }}">
-                                {{ $facility->status === 'aktif' ? 'Aktif' : 'Tidak aktif' }}
-                            </span>
-                        </td>
-
-                        <td>
-                            <div class="d-flex gap-2">
-                                <a class="btn btn-sm btn-outline-primary"
-                                    href="{{ route('admin.facilities.edit', $facility) }}">
-                                    Edit
-                                </a>
-
-                                <form method="POST"
-                                    action="{{ route('admin.facilities.destroy', $facility) }}"
-                                    onsubmit="return confirm('Hapus fasilitas ini dari daftar aktif?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger">Hapus</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            Belum ada data fasilitas. Klik Tambah Fasilitas untuk mulai mengisi.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+      <table class="table align-middle">
+        <thead><tr><th>Fasilitas</th><th>Jenis</th><th>Lokasi / Induk</th><th>Kapasitas / Stok</th><th>Kondisi</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody>
+          @foreach($items as $f)
+            @php $locked = in_array($f['slug'], $inUse); $kc = ['Baik' => 'ok', 'Rusak' => 'bad', 'Pemeliharaan' => 'warn'][$f['kondisi']]; @endphp
+            <tr data-filter-item data-group="{{ $f['jenis'] }}" data-status="{{ $f['status'] }}" data-text="{{ $f['nama'] }} {{ $f['lokasi'] }} {{ $f['kategori'] }}">
+              <td><div class="d-flex align-items-center gap-2"><img src="{{ asset('img/' . $f['img']) }}" alt="" style="width:46px;height:32px;object-fit:cover;border-radius:6px"><div><b>{{ $f['nama'] }}</b><div class="muted small">{{ $f['kategori'] }}</div></div></div></td>
+              <td>{{ ucfirst($f['jenis']) }}</td>
+              <td>{{ $f['lokasi'] }}</td>
+              <td>{{ $f['jumlah'] === null ? '-' : $f['jumlah'] . ($f['jenis'] === 'barang' ? ' unit' : ' orang') }}</td>
+              <td><span class="status {{ $kc }}">{{ $f['kondisi'] }}</span></td>
+              <td><span class="status {{ $f['status'] === 'Aktif' ? 'ok' : 'bad' }}">{{ $f['status'] }}</span></td>
+              <td class="text-nowrap">
+                <a class="btn-view" href="{{ route('admin.facilities.edit', $f['slug']) }}">Edit</a>
+                <button type="button" class="btn-danger-soft ms-1" data-remove @if($locked) disabled title="Masih dipakai pengajuan aktif" @else data-danger="1" data-confirm="Hapus {{ $f['nama'] }}? Data fasilitas akan dihapus permanen." data-success="Fasilitas dihapus (simulasi)." @endif aria-label="Hapus {{ $f['nama'] }}"><i class="bi bi-trash3"></i></button>
+              </td>
+            </tr>
+          @endforeach
+          <tr class="table-empty" data-filter-empty style="display:none"><td colspan="7">Fasilitas tidak ditemukan.</td></tr>
+        </tbody>
+      </table>
     </div>
-
-    {{ $facilities->links() }}
+    <p class="muted small mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Fasilitas yang masih dipakai pengajuan berstatus Menunggu, Disetujui, atau Sedang Digunakan tidak dapat dihapus; ubah statusnya menjadi Tidak Aktif.</p>
+  </div>
 </div>
-
 @endsection

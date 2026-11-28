@@ -1,70 +1,37 @@
 <!doctype html>
 <html lang="id">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Login Admin · FASLINK</title>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Masuk · FASLINK</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link href="{{ asset('css/faslink.css') }}" rel="stylesheet">
 </head>
 <body>
-  <div class="container min-vh-100 d-flex align-items-center justify-content-center">
-    <div class="panel p-4 p-md-5" style="max-width: 420px; width: 100%;">
-
-      <div class="text-center mb-4">
-        <div class="brand-mark mx-auto mb-3" style="background: var(--navy); color: white;">
-          <i class="bi bi-shield-lock"></i>
-        </div>
-        <h2 style="font-size: 20px; font-weight: 700; color: var(--navy);">FASLINK</h2>
-        <p class="muted" style="margin-top: 4px;">Masuk sebagai admin untuk mengelola fasilitas kampus.</p>
-      </div>
-
-      <form method="POST" action="{{ route('login.store') }}">
-        @csrf
-
-        @if(session('error'))
-          <div class="alert alert-warning py-2">{{ session('error') }}</div>
-        @endif
-
-        @if($errors->any())
-          <div class="alert alert-danger py-2">{{ $errors->first() }}</div>
-        @endif
-
-        <div class="mb-3">
-          <label class="form-label" for="email">Email Admin</label>
-          <input
-            id="email"
-            type="email"
-            name="email"
-            value="{{ old('email') }}"
-            class="form-control"
-            placeholder="Masukkan email admin"
-            required
-            autofocus>
-        </div>
-
-        <div class="mb-4">
-          <label class="form-label" for="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            name="password"
-            class="form-control"
-            placeholder="Masukkan password"
-            required>
-        </div>
-
-        <button type="submit" class="btn btn-primary w-100">
-          <i class="bi bi-box-arrow-in-right me-2"></i>Masuk sebagai Admin
-        </button>
-
-        <a href="{{ route('user.dashboard') }}" class="btn btn-outline-primary w-100 mt-2">
-          <i class="bi bi-arrow-left me-2"></i>Kembali ke Dashboard
-        </a>
-      </form>
-
+<div class="container min-vh-100 d-flex align-items-center justify-content-center py-4">
+  <div class="card-soft p-4 p-md-5" style="max-width:440px;width:100%">
+    <div class="text-center mb-4">
+      <div class="mx-auto mb-3 d-grid" style="width:56px;height:56px;border-radius:16px;background:var(--navy);color:#fff;place-items:center;font-size:30px"><i class="bi bi-buildings"></i></div>
+      <h2 class="fw-bold" style="color:var(--navy-dark)">FASLINK</h2>
+      <p class="muted mb-0">Masuk untuk meminjam fasilitas kampus.</p>
     </div>
+    <form id="loginForm" class="needs-validation" novalidate data-user="{{ route('user.dashboard') }}" data-admin="{{ route('admin.dashboard') }}">
+      <div class="filter-pills mb-3 justify-content-center">
+        <label class="m-0"><input class="btn-check" type="radio" name="role" value="user" checked><span class="btn btn-outline-primary btn-sm">Mahasiswa</span></label>
+        <label class="m-0"><input class="btn-check" type="radio" name="role" value="admin"><span class="btn btn-outline-primary btn-sm">Admin Sarpras</span></label>
+      </div>
+      <label class="form-label" for="ident">Email / NIM</label>
+      <input class="form-control mb-3" id="ident" required placeholder="Masukkan email atau NIM" autocomplete="username">
+      <label class="form-label" for="pw">Password</label>
+      <input type="password" class="form-control mb-4" id="pw" required minlength="6" placeholder="Masukkan password" autocomplete="current-password">
+      <button type="submit" class="btn btn-primary w-100">Masuk</button>
+      <p class="muted small text-center mt-3 mb-0">Mode demo: isi bebas, belum terhubung ke autentikasi.</p>
+    </form>
   </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ asset('js/faslink.js') }}"></script>
 </body>
 </html>
